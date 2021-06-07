@@ -2,9 +2,12 @@
 # please make sure that this program support your statement, 
 # else modify format_data func def
 
+#install this python packages before run
 import matplotlib.pyplot as plt
 from datetime import datetime 
 import csv
+import pandas as pd # for annotation
+import seaborn as sns # for annotation
 
 # pass a formatted list of lists 
 # store into csv file 
@@ -20,7 +23,7 @@ def store_data(data_dict):
 # convert given csv format to easy csv format 
 # easy csv format will be used for graph
 def format_data():
-    f = open("AccountTrans.csv","r")
+    f = open("statement-analyzer/AccountTrans.csv","r")
     data = list(csv.reader(f))
     data_dict = {} 
 
@@ -38,37 +41,55 @@ def format_data():
 def show_graph():
     f = open("acc_db.csv","r")
     data = list(csv.reader(f))
-    date = []
+    debit_date = []
+    credit_date = []
     details = []
     credit_history = [] 
     debit_history = []
 
     for index in data:
         details.append(index[0])
-        date.append(index[1])
-        if index[2] == '':
-            credit_history.append(0)
-        else:
+        if index[2] != '':
+            credit_date.append(index[1])
+            #credit_history.append(0)
             credit_history.append(float(index[2].replace(',','')))
-        if index[3] == '':
-            debit_history.append(0)
-        else:
+        if index[3] != '':
+             #debit_history.append(0) 
+            debit_date.append(index[1])
             debit_history.append(float(index[3].replace(',','')))
         
-    print(date,end="\n\n") 
+    print(debit_date,end="\n\n") 
     print(credit_history,end="\n\n") 
     print(debit_history,end="\n\n")
 
     ## need to write code to show graph properly
     fig = plt.figure()
-    #plot = fig.add_subplot(111)
-
-    plt.bar(date,debit_history)
-    #plt.bar(date,credit_history)
+    plt.bar(debit_date,debit_history)
+    #plt.bar(credit_date,credit_history) # will implement later
     plt.ylabel("Expenses")
     plt.xlabel("Date")
 
-    fig.canvas.mpl_connect('motion_notify_event', on_plot_hover)           
+    #implementation of annotate
+    whole_data = {"Date":debit_date,"Expenses":debit_history}
+    df = pd.DataFrame(whole_data,columns=["Date","Expenses"])
+    #plt.figure(figsize=(20,20))
+    plots = sns.barplot(x="Date", y="Expenses", data=df)
+
+    for bar in plots.patches:
+        #print(dir(plots.texts))
+        plots.annotate(format(bar.get_height(),'.2f'),
+                        (bar.get_x() + bar.get_width()/2,
+                        bar.get_height()),ha='center',va = 'center',
+                        size=10,xytext=(0,8),
+                        textcoords='offset points')
+
+    # # refer https://www.geeksforgeeks.org/how-to-annotate-bars-in-barplot-with-matplotlib-in-python/
+    # for index, value in enumerate(date):
+    #     print("index is %d value is %s",index,value)
+    #     plt.text(value,index,str(value))
+
+    #annotate end
+                            
     plt.show()
     f.close()
 
@@ -79,7 +100,7 @@ format_data()
 show_graph()
 
 #if you want to show graph in website
-#uncomment below code and implement
+#follow below code to implement
 # import mpld3
 # from mpld3._server import serve 
 #implementation of mpld3 example 
